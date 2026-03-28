@@ -13,18 +13,6 @@
 * Add images to flashcards
 * Organize content into decks
 
----
-
-### AI-Powered Tools
-
-* Automatically generate:
-
-  * Flashcards
-  * Quizzes
-  * Study guides
-* AI reads uploaded files and converts them into reviewer-friendly content
-
----
 
 ### Quiz System
 
