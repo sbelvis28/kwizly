@@ -1,0 +1,137 @@
+:root {
+    --primary: #834cf1;
+    --primary-dark: #6b39d1;
+    --secondary: #f0ebff;
+    --bg: #F5F3FF;
+    --accent: #C4B5FD;
+    --white: #ffffff;
+    --text: #2D3748;
+    --radius: 18px;
+}
+
+body {
+    font-family: 'Lexend', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+}
+
+/* LANDING PAGE CENTERING */
+.centered-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    min-height: 80vh;
+}
+
+.hero h1 {
+    font-size: 4rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.tagline {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 2.5rem;
+}
+
+/* START STUDYING BUTTON FONT */
+.start-btn {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    padding: 18px 50px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-top: 60px;
+    width: 100%;
+}
+
+.info-card i {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 15px;
+}
+
+.step-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-weight: 500;
+}
+
+/* NEW BACK BUTTON DESIGN */
+.btn-back-modern {
+    background: none;
+    border: 2px solid var(--accent);
+    color: var(--primary);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-family: 'Lexend';
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    width: fit-content;
+}
+
+.btn-back-modern:hover {
+    background: var(--accent);
+    color: white;
+}
+
+/* NEW ADD CARD BUTTON DESIGN */
+.btn-add-card {
+    width: 100%;
+    background: var(--secondary);
+    border: 2px dashed var(--primary);
+    color: var(--primary);
+    padding: 15px;
+    border-radius: var(--radius);
+    font-family: 'Lexend';
+    font-weight: 600;
+    cursor: pointer;
+    margin: 20px 0;
+    transition: 0.3s;
+}
+
+.btn-add-card:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Existing structural CSS remains the same... */
+nav { background: white; padding: 1rem 5%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1100px; margin: 0 auto; }
+.logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); cursor: pointer; }
+.view { max-width: 900px; margin: 40px auto; padding: 0 20px; animation: fadeIn 0.4s; }
+.hidden { display: none !important; }
+.btn-primary { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 14px; cursor: pointer; font-family: 'Lexend'; font-weight: 500; }
+.btn-lg { background: var(--primary); color: white; border: none; border-radius: 20px; cursor: pointer; box-shadow: 0 10px 20px rgba(131, 76, 241, 0.2); }
+.btn-full { width: 100%; margin-top: 30px; padding: 15px; }
+.deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.deck-card { background: white; padding: 25px; border-radius: var(--radius); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.input-group { margin-bottom: 20px; }
+.input-group input { width: 100%; padding: 14px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-family: 'Lexend'; }
+.import-zone { border: 2.5px dashed var(--accent); padding: 40px; text-align: center; border-radius: var(--radius); background: white; cursor: pointer; margin-bottom: 30px; }
+.card-row { display: flex; gap: 10px; margin-bottom: 10px; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Flashcard styles */
+.flashcard-container { perspective: 1000px; height: 350px; margin: 40px auto; max-width: 500px; }
+.flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+.flashcard.flipped { transform: rotateY(180deg); }
+.card-inner { width: 100%; height: 100%; }
+.card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; background: white; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); padding: 30px; font-size: 1.5rem; text-align: center; }
+.card-back { background: var(--primary); color: white; transform: rotateY(180deg); }
