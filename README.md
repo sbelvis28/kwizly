@@ -1,12 +1,12 @@
-# 🧠 Kwizly
+# Kwizly
 
 **Kwizly** is a modern, student-friendly web application designed to make studying faster, smarter, and more efficient—without requiring accounts, subscriptions, or ads.
 
 ---
 
-## 🚀 Features
+## Features
 
-### 📚 Flashcards & Decks
+### Flashcards & Decks
 
 * Create your own flashcards manually
 * Import files (PDF and more) to generate decks
@@ -15,7 +15,7 @@
 
 ---
 
-### 🤖 AI-Powered Tools
+### AI-Powered Tools
 
 * Automatically generate:
 
@@ -26,7 +26,7 @@
 
 ---
 
-### 📝 Quiz System
+### Quiz System
 
 * Multiple quiz types:
 
@@ -40,7 +40,7 @@
 
 ---
 
-### 📊 Smart Learning System
+### Smart Learning System
 
 * Spaced repetition:
 
@@ -51,7 +51,7 @@
 
 ---
 
-### 🔄 Import & Export
+### Import & Export
 
 * Import decks from files
 * Export decks into a single shareable file
@@ -59,14 +59,14 @@
 
 ---
 
-### 🔥 Motivation System
+### Motivation System
 
 * Daily study streak tracker
 * Encourages consistent learning habits
 
 ---
 
-### 📱 Accessibility
+### Accessibility
 
 * Works on any device:
 
@@ -76,56 +76,44 @@
 
 ---
 
-## 🖥️ Pages Overview
+## Pages Overview
 
-### 🏠 Homepage
+### Homepage
 
 * App title and tagline
 * Instructions / tutorial
 * About section
 * Start button
 
-### 📦 Deck Page
+### Deck Page
 
 * View all created decks
 * Create, import, export, or delete decks
 
-### ✍️ Deck Creation
+### Deck Creation
 
 * Manual flashcard creation
 * File import + AI generation
 
-### 🧠 Flashcard Mode
+### Flashcard Mode
 
 * Flip cards
 * Rate difficulty (Hard, Good, Easy)
 
-### 📝 Quiz Mode
+### Quiz Mode
 
 * Choose quiz type
 * Answer questions
 * View score and performance
 
-### 🔍 Review Mode
+### Review Mode
 
 * Review incorrect answers
 * Reinforce difficult questions
 
 ---
 
-## 🎨 Design
-
-* Color Theme: Shades of Purple
-* Font: Lexend
-* Style:
-
-  * Clean and minimal
-  * Rounded UI elements
-  * Smooth animations
-
----
-
-## 🎯 Goals
+## Goals
 
 Kwizly is built to:
 
@@ -135,21 +123,12 @@ Kwizly is built to:
 
 ---
 
-## 🛠️ Future Improvements
-
-* Dark mode
-* Cloud saving (optional)
-* Collaboration features
-* Advanced analytics
-
----
-
-## 📌 License
+## License
 
 This project is open for educational and personal use.
 
 ---
 
-## 💡 Tagline
+## Tagline
 
 **“Study smarter, not harder—with Kwizly.”**
