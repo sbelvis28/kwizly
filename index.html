@@ -4,105 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kwizly | Study Smarter</title>
-    <!-- 1. LEXEND FONT -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Font: Lexend -->
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- 2. TAILWIND CSS (Design) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#834cf1',
-                        secondary: '#9F7AEA',
-                        background: '#F5F3FF',
-                        accent: '#C4B5FD',
-                    },
-                    fontFamily: { sans: ['Lexend', 'sans-serif'] }
-                }
-            }
-        }
-    </script>
-    <!-- 3. REACT (Logic) -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        body { background-color: #F5F3FF; }
-        .card-shadow { box-shadow: 0 4px 20px rgba(131, 76, 241, 0.1); }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        function KwizlyApp() {
-            const [view, setView] = useState('home'); // home, decks, study
-            const [decks, setDecks] = useState([
-                { id: 1, title: 'CS Fundamentals', cards: 20, tags: ['Operating Systems', 'Networking'] },
-                { id: 2, title: 'Algorithms', cards: 15, tags: ['Data Structures'] }
-            ]);
-
-            const HomePage = () => (
-                <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
-                    <h1 className="text-6xl font-bold text-primary mb-2">Kwizly</h1>
-                    <p className="text-xl text-gray-600 mb-8 font-light">study smarter, faster, easier</p>
-                    
-                    <div className="bg-white p-8 rounded-[20px] card-shadow max-w-md mb-8">
-                        <h2 className="font-bold mb-4 text-primary">Instructions</h2>
-                        <ul className="text-left text-sm space-y-2 text-gray-600">
-                            <li>✨ Create decks manually or with AI</li>
-                            <li>📦 Import/Export your study files</li>
-                            <li>🔥 Keep your daily streak alive</li>
-                        </ul>
-                    </div>
-
-                    <button 
-                        onClick={() => setView('decks')}
-                        className="bg-primary text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-opacity-90 transition-all">
-                        Start Studying →
-                    </button>
+    <!-- Navigation / Header -->
+    <nav>
+        <div class="nav-container">
+            <h1 onclick="showPage('landing')">Kwizly</h1>
+            <div class="nav-right">
+                <div class="streak-container">
+                    <span id="streak-flame">🔥</span> <span id="streak-count">0</span>
                 </div>
-            );
+                <button id="theme-toggle" onclick="toggleDarkMode()">🌓</button>
+            </div>
+        </div>
+    </nav>
 
-            const DeckPage = () => (
-                <div className="max-w-5xl mx-auto p-6">
-                    <div className="flex justify-between items-center mb-10">
-                        <h1 className="text-3xl font-bold text-primary">Kwizly</h1>
-                        <button className="bg-black text-white px-6 py-2 rounded-lg font-medium">+ New Deck</button>
+    <main id="app-container">
+        
+        <!-- PAGE 1: LANDING PAGE -->
+        <section id="landing-page" class="page active">
+            <div class="hero">
+                <h1 class="large-title">Kwizly</h1>
+                <p class="tagline">study smarter, faster, easier</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary" onclick="showPage('dashboard')">Start Studying</button>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Tutorial</h3>
+                    <p>1. Create a deck. 2. Add cards. 3. Study or Quiz yourself!</p>
+                </div>
+                <div class="info-card">
+                    <h3>About</h3>
+                    <p>No accounts. No ads. Just pure learning stored in your browser.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 2: DASHBOARD (DECK PAGE) -->
+        <section id="dashboard" class="page">
+            <div class="section-header">
+                <h2>Your Decks</h2>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="document.getElementById('file-import').click()">Import</button>
+                    <input type="file" id="file-import" hidden onchange="importDeck(event)">
+                    <button class="btn-primary" onclick="showPage('create-deck')">+ New Deck</button>
+                </div>
+            </div>
+            <div id="deck-list" class="deck-grid">
+                <!-- Decks will be injected here by JS -->
+            </div>
+        </section>
+
+        <!-- PAGE 3: CREATE DECK -->
+        <section id="create-deck" class="page">
+            <h2>Create New Deck</h2>
+            <div class="form-group">
+                <input type="text" id="deck-title-input" placeholder="Deck Title (e.g., Biology 101)">
+                <textarea id="deck-desc-input" placeholder="Description (optional)"></textarea>
+            </div>
+            <div id="card-inputs-container">
+                <div class="card-input-row">
+                    <input type="text" placeholder="Question" class="q-input">
+                    <input type="text" placeholder="Answer" class="a-input">
+                </div>
+            </div>
+            <button class="btn-secondary" onclick="addCardInput()">+ Add Another Card</button>
+            <div class="form-actions">
+                <button class="btn-ghost" onclick="showPage('dashboard')">Cancel</button>
+                <button class="btn-primary" onclick="saveNewDeck()">Save Deck</button>
+            </div>
+        </section>
+
+        <!-- PAGE 4: FLASHCARD MODE -->
+        <section id="flashcard-mode" class="page">
+            <div class="mode-header">
+                <button onclick="showPage('dashboard')">← Back</button>
+                <h2 id="study-deck-title">Study</h2>
+                <div id="study-progress">1 / 10</div>
+            </div>
+            <div class="flashcard-container">
+                <div class="flashcard" id="main-card" onclick="this.classList.toggle('flipped')">
+                    <div class="card-front">
+                        <p id="card-front-text">Front</p>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {decks.map(deck => (
-                            <div key={deck.id} className="bg-white p-6 rounded-[20px] card-shadow border border-purple-100 hover:scale-105 transition-transform">
-                                <h3 className="text-xl font-bold mb-1">{deck.title}</h3>
-                                <p className="text-xs text-gray-400 mb-4">{deck.cards} cards</p>
-                                <div className="flex flex-wrap gap-2 mb-6">
-                                    {deck.tags.map(tag => (
-                                        <span key={tag} className="text-[10px] bg-purple-50 text-primary px-2 py-1 rounded-full uppercase font-bold">{tag}</span>
-                                    ))}
-                                </div>
-                                <div className="flex gap-2">
-                                    <button className="flex-1 bg-primary text-white py-2 rounded-lg text-sm font-bold">Study</button>
-                                    <button className="flex-1 border border-gray-200 py-2 rounded-lg text-sm font-bold">Quiz</button>
-                                </div>
-                            </div>
-                        ))}
+                    <div class="card-back">
+                        <p id="card-back-text">Back</p>
                     </div>
                 </div>
-            );
+            </div>
+            <div class="study-controls">
+                <button class="btn-secondary" onclick="prevCard()">Previous</button>
+                <div class="rating-buttons" id="rating-btns">
+                    <button class="rate-hard" onclick="nextCard('hard')">Hard</button>
+                    <button class="rate-good" onclick="nextCard('good')">Good</button>
+                    <button class="rate-easy" onclick="nextCard('easy')">Easy</button>
+                </div>
+                <button class="btn-secondary" onclick="nextCard()">Next</button>
+            </div>
+        </section>
 
-            return (
-                <main>
-                    {view === 'home' ? <HomePage /> : <DeckPage />}
-                </main>
-            );
-        }
+    </main>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<KwizlyApp />);
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
