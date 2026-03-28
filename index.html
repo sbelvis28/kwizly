@@ -2,19 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwizly | Study Smarter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Kwizly - A free, no-ads, no-account study platform for flashcards and quizzes.">
+    <title>Kwizly | Study Smarter, Faster, Easier</title>
+    
+    <!-- External Assets -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
+    <!-- 🧭 NAVIGATION -->
     <nav>
         <div class="nav-container">
-            <div class="logo" onclick="showSection('home')">Kwizly</div>
+            <div class="logo" onclick="showSection('home')" role="button" aria-label="Go to home">Kwizly</div>
             <div class="nav-right">
-                <div class="streak-container">
+                <div class="streak-container" title="Daily Study Streak">
                     <i class="fas fa-fire-alt flame-icon"></i>
                     <span id="streak-count">0</span>
                 </div>
@@ -23,9 +27,12 @@
         </div>
     </nav>
 
+    <!-- 📢 NOTIFICATION TOAST -->
+    <div id="toast" class="hidden"></div>
+
     <main id="app-container">
         
-        <!-- HOME SECTION: Centered Content -->
+        <!-- 🏠 HOME SECTION -->
         <section id="home" class="view centered-view">
             <div class="hero">
                 <h1>Kwizly</h1>
@@ -35,44 +42,44 @@
 
             <div class="info-grid">
                 <div class="info-card">
-                    <i class="fas fa-bolt"></i>
+                    <i class="fas fa-bolt" aria-hidden="true"></i>
                     <h3>Flash Speed</h3>
-                    <p>Create flashcards manually or use AI to generate them from your notes.</p>
+                    <p>Create cards manually or use AI simulation to generate from files.</p>
                 </div>
                 <div class="info-card">
-                    <i class="fas fa-brain"></i>
+                    <i class="fas fa-brain" aria-hidden="true"></i>
                     <h3>Spaced Repetition</h3>
-                    <p>Our algorithm ensures you focus on the cards you find hardest.</p>
+                    <p>Focus on what you find hardest automatically.</p>
                 </div>
                 <div class="info-card">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>No Accounts</h3>
-                    <p>Your data stays on your device. No ads, no tracking, no subscriptions.</p>
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                    <h3>Private & Free</h3>
+                    <p>No accounts. No ads. Everything is saved on your device.</p>
                 </div>
             </div>
 
             <div class="tutorial">
                 <h2>How it works</h2>
                 <div class="step-list">
-                    <p>1. Create a Deck</p>
-                    <p>2. Upload a PDF or write your own</p>
-                    <p>3. Study & Track your streak</p>
+                    <p>1. Create a Deck manually or via File Upload</p>
+                    <p>2. Choose Flashcards or Quiz mode</p>
+                    <p>3. Review mistakes to build a streak</p>
                 </div>
             </div>
         </section>
 
-        <!-- DECK DASHBOARD: Export All Removed -->
+        <!-- 📚 DECK DASHBOARD -->
         <section id="deck-page" class="view hidden">
             <div class="section-header">
                 <h2>Your Decks</h2>
-                <div class="action-buttons">
-                    <button class="btn-primary" onclick="showSection('create-deck')"><i class="fas fa-plus"></i> New Deck</button>
-                </div>
+                <button class="btn-primary" onclick="prepareNewDeck()"><i class="fas fa-plus"></i> New Deck</button>
             </div>
-            <div id="deck-grid" class="deck-grid"></div>
+            <div id="deck-grid" class="deck-grid">
+                <!-- Decks appear here -->
+            </div>
         </section>
 
-        <!-- CREATE/EDIT DECK: Redesigned Back and Add buttons -->
+        <!-- ✍️ EDITOR SECTION -->
         <section id="create-deck" class="view hidden">
             <div class="editor-container">
                 <button class="btn-back-modern" onclick="showSection('deck-page')">
@@ -82,15 +89,20 @@
                 <h2 style="margin-top: 20px;">Create New Deck</h2>
                 
                 <div class="input-group">
-                    <label>Deck Title</label>
+                    <label for="deck-title-input">Deck Title</label>
                     <input type="text" id="deck-title-input" placeholder="e.g. Biology 101">
                 </div>
 
-                <div class="import-zone" id="drop-zone">
+                <div class="import-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload File">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Drag & Drop files or <span>Browse</span></p>
-                    <small>PDF, DOCX, Images, PPTX</small>
+                    <small>Supports PDF, DOCX, Images, PPTX</small>
                     <input type="file" id="file-upload" hidden accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.jpg,.jpeg,.png">
+                </div>
+
+                <div id="ai-loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>AI is analyzing your file...</p>
                 </div>
 
                 <div class="manual-entry">
@@ -105,49 +117,102 @@
             </div>
         </section>
 
-        <!-- (Other modes: Flashcard, Quiz, Results remain the same as previous functional version) -->
+        <!-- 🧠 FLASHCARD MODE -->
         <section id="flashcard-mode" class="view hidden">
             <div class="study-header">
                 <button class="btn-back-modern" onclick="showSection('deck-page')">Exit</button>
                 <div id="study-progress-text">1 / 10</div>
             </div>
+            
             <div class="flashcard-container">
-                <div class="flashcard" id="flashcard" onclick="flipCard()">
+                <div class="flashcard" id="flashcard" onclick="flipCard()" role="button" aria-label="Flip Card">
                     <div class="card-inner">
                         <div class="card-front"><p id="card-front-text"></p></div>
                         <div class="card-back"><p id="card-back-text"></p></div>
                     </div>
                 </div>
             </div>
+
             <div class="study-controls">
-                <button onclick="prevCard()" class="btn-nav"><i class="fas fa-chevron-left"></i></button>
-                <div id="rating-controls" class="hidden">
-                    <button class="rate-btn hard" onclick="rateCard('hard')">Hard</button>
-                    <button class="rate-btn good" onclick="rateCard('good')">Good</button>
-                    <button class="rate-btn easy" onclick="rateCard('easy')">Easy</button>
+                <button onclick="prevCard()" class="btn-nav" aria-label="Previous card"><i class="fas fa-chevron-left"></i></button>
+                <div id="flashcard-rating" class="hidden rating-bar">
+                     <button class="rate-btn hard" onclick="rateFlashcard('hard')">Hard</button>
+                     <button class="rate-btn good" onclick="rateFlashcard('good')">Good</button>
+                     <button class="rate-btn easy" onclick="rateFlashcard('easy')">Easy</button>
                 </div>
-                <button onclick="nextCard()" class="btn-nav"><i class="fas fa-chevron-right"></i></button>
+                <button onclick="nextCard()" class="btn-nav" aria-label="Next card"><i class="fas fa-chevron-right"></i></button>
             </div>
         </section>
 
+        <!-- ⚙️ QUIZ SETTINGS -->
+        <section id="quiz-settings" class="view hidden centered-view">
+            <button class="btn-back-modern" onclick="showSection('deck-page')">Back</button>
+            <h2 style="margin-top:20px;">Quiz Mode</h2>
+            <div class="quiz-type-grid">
+                <button class="type-card" onclick="startQuizEngine('mcq')">
+                    <i class="fas fa-list-ul"></i><span>Multiple Choice</span>
+                </button>
+                <button class="type-card" onclick="startQuizEngine('tf')">
+                    <i class="fas fa-check-double"></i><span>True / False</span>
+                </button>
+                <button class="type-card" onclick="startQuizEngine('id')">
+                    <i class="fas fa-keyboard"></i><span>Identification</span>
+                </button>
+                <button class="type-card" onclick="startQuizEngine('cloze')">
+                    <i class="fas fa-italic"></i><span>Cloze</span>
+                </button>
+                <button class="type-card" onclick="startQuizEngine('mixed')">
+                    <i class="fas fa-random"></i><span>Mixed Mode</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 📝 QUIZ ENGINE -->
         <section id="quiz-mode" class="view hidden">
             <div class="quiz-container">
-                <div class="progress-bar-container"><div id="quiz-progress-bar" class="progress-bar"></div></div>
-                <h2 id="quiz-question-text"></h2>
+                <div class="quiz-header">
+                    <div id="quiz-progress-text">Question 1/10</div>
+                    <div class="progress-bar-container"><div id="quiz-progress-bar" class="progress-bar"></div></div>
+                </div>
+                <h2 id="quiz-question-text" style="margin: 30px 0;"></h2>
                 <div id="quiz-options" class="options-grid"></div>
-                <button id="quiz-next-btn" class="btn-primary hidden" onclick="nextQuizQuestion()">Next Question</button>
+                <div id="quiz-input-container" class="hidden">
+                    <input type="text" id="quiz-text-answer" placeholder="Type answer..." autocomplete="off">
+                    <button class="btn-primary" style="margin-top:15px; width: 100%;" onclick="checkTextAnswer()">Submit</button>
+                </div>
+                <div id="quiz-feedback" class="feedback-box hidden"></div>
+                <button id="quiz-next-btn" class="btn-primary hidden btn-full" onclick="nextQuizQuestion()">Next Question</button>
             </div>
         </section>
 
-        <section id="results-mode" class="view hidden">
-            <div class="results-container">
-                <h1 id="score-display"></h1>
-                <div class="action-buttons">
-                    <button class="btn-secondary" onclick="showSection('deck-page')">Home</button>
-                    <button class="btn-primary" onclick="restartQuiz()">Retake Quiz</button>
+        <!-- 🔍 REVIEW MODE -->
+        <section id="review-mode" class="view hidden">
+            <div class="centered-view">
+                <h2>Review Mistakes</h2>
+                <div class="review-card">
+                    <div id="rev-q" class="review-q"></div>
+                    <hr>
+                    <div id="rev-a" class="review-a"></div>
+                    <div class="rating-bar">
+                        <button class="rate-btn hard" onclick="handleRate('hard')">Hard</button>
+                        <button class="rate-btn good" onclick="handleRate('good')">Good</button>
+                        <button class="rate-btn easy" onclick="handleRate('easy')">Easy</button>
+                    </div>
                 </div>
             </div>
         </section>
+
+        <!-- 🎉 RESULTS -->
+        <section id="results-mode" class="view hidden">
+            <div class="centered-view">
+                <h1 id="score-display">0%</h1>
+                <p id="score-details"></p>
+                <div class="action-buttons result-btns">
+                    <!-- Dynamic buttons -->
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
