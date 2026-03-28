@@ -1,260 +1,333 @@
-// --- STATE MANAGEMENT ---
+// --- DATA PERSISTENCE ---
 let decks = JSON.parse(localStorage.getItem('kwizly_decks')) || [];
-let currentDeck = null;
-let currentCardIndex = 0;
 let streak = parseInt(localStorage.getItem('kwizly_streak')) || 0;
 let lastStudyDate = localStorage.getItem('kwizly_last_date') || null;
 
-// --- NAVIGATION ---
-function showSection(sectionId) {
-    document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
-    document.getElementById(sectionId).classList.remove('hidden');
-    
-    if(sectionId === 'deck-page') renderDecks();
-    window.scrollTo(0,0);
+// Global State
+let currentDeckIndex = null;
+let currentCardIndex = 0;
+let quizQuestions = [];
+let quizIndex = 0;
+let score = 0;
+let mistakes = [];
+
+// --- INITIALIZE ---
+document.getElementById('streak-count').innerText = streak;
+renderDecks();
+
+// --- ROUTING ---
+function showSection(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    window.scrollTo(0, 0);
+    if (id === 'deck-page') renderDecks();
 }
 
-// --- DECK LOGIC ---
+// --- DECK MANAGEMENT ---
 function renderDecks() {
     const grid = document.getElementById('deck-grid');
     grid.innerHTML = '';
-    
-    decks.forEach((deck, index) => {
-        const card = document.createElement('div');
-        card.className = 'deck-card';
-        card.innerHTML = `
+
+    if (decks.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; opacity: 0.6;">No decks yet. Create your first one!</p>';
+    }
+
+    decks.forEach((deck, i) => {
+        const div = document.createElement('div');
+        div.className = 'deck-card';
+        div.innerHTML = `
             <h3>${deck.title}</h3>
             <p>${deck.cards.length} Cards</p>
-            <div class="deck-actions" style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap">
-                <button class="btn-primary" onclick="startStudy(${index})">Study</button>
-                <button class="btn-secondary" onclick="startQuiz(${index})">Quiz</button>
-                <button class="btn-nav" onclick="exportDeck(${index})"><i class="fas fa-file-export"></i></button>
-                <button class="btn-nav" style="color:red" onclick="deleteDeck(${index})"><i class="fas fa-trash"></i></button>
+            <div class="deck-actions">
+                <button class="btn-quiz" onclick="startFlashcards(${i})">Study</button>
+                <button class="btn-icon-action" onclick="openQuizSettings(${i})" title="Quiz"><i class="fas fa-tasks"></i></button>
+                <button class="btn-icon-action delete" onclick="deleteDeck(${i})" title="Delete"><i class="fas fa-trash"></i></button>
             </div>
         `;
-        grid.appendChild(card);
+        grid.appendChild(div);
     });
 }
 
-// --- EDITOR & AI MOCK ---
-let tempCards = [];
-function addCardInput() {
+function prepareNewDeck() {
+    document.getElementById('deck-title-input').value = '';
+    document.getElementById('card-inputs').innerHTML = '';
+    addCardInput();
+    showSection('create-deck');
+}
+
+function addCardInput(q = '', a = '') {
     const container = document.getElementById('card-inputs');
     const div = document.createElement('div');
-    div.className = 'input-group card-row';
+    div.style.display = 'flex';
+    div.style.gap = '10px';
+    div.style.marginBottom = '10px';
+    div.className = 'manual-card-row';
     div.innerHTML = `
-        <input type="text" placeholder="Question" class="q-input">
-        <input type="text" placeholder="Answer" class="a-input">
+        <input type="text" placeholder="Question" class="q-input" value="${q}" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd;">
+        <input type="text" placeholder="Answer" class="a-input" value="${a}" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd;">
     `;
     container.appendChild(div);
 }
 
-// File Upload Simulation
-document.getElementById('drop-zone').onclick = () => document.getElementById('file-upload').click();
-document.getElementById('file-upload').onchange = function(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-
-    document.getElementById('ai-loading').classList.remove('hidden');
-    
-    // Simulating AI Processing delay
-    setTimeout(() => {
-        const mockCards = [
-            { q: `Concept from ${file.name} 1`, a: "Automated Answer A" },
-            { q: `Concept from ${file.name} 2`, a: "Automated Answer B" },
-            { q: `Concept from ${file.name} 3`, a: "Automated Answer C" },
-        ];
-        
-        mockCards.forEach(c => {
-            const container = document.getElementById('card-inputs');
-            const div = document.createElement('div');
-            div.className = 'input-group card-row';
-            div.innerHTML = `<input type="text" value="${c.q}" class="q-input"><input type="text" value="${c.a}" class="a-input">`;
-            container.appendChild(div);
-        });
-
-        document.getElementById('ai-loading').classList.add('hidden');
-        alert("AI successfully extracted cards from file!");
-    }, 2000);
-};
-
 function saveDeck() {
     const title = document.getElementById('deck-title-input').value;
-    const cardRows = document.querySelectorAll('.card-row');
+    const rows = document.querySelectorAll('.manual-card-row');
     let cards = [];
 
-    cardRows.forEach(row => {
+    rows.forEach(row => {
         const q = row.querySelector('.q-input').value;
         const a = row.querySelector('.a-input').value;
-        if(q && a) cards.push({ q, a, interval: 1, ease: 2.5, nextReview: Date.now() });
+        if (q && a) cards.push({ q, a, interval: 1, nextReview: Date.now() });
     });
 
-    if(!title || cards.length === 0) return alert("Please add a title and at least one card");
+    if (!title) return showToast("Please add a title!");
+    if (cards.length === 0) return showToast("Add at least one card!");
 
     decks.push({ title, cards });
     localStorage.setItem('kwizly_decks', JSON.stringify(decks));
+    showToast("Deck Saved! 🎉");
     showSection('deck-page');
-    updateStreak();
 }
 
-// --- STUDY MODE (Spaced Repetition) ---
-function startStudy(index) {
-    currentDeck = decks[index];
+function deleteDeck(i) {
+    if (confirm("Delete this deck?")) {
+        decks.splice(i, 1);
+        localStorage.setItem('kwizly_decks', JSON.stringify(decks));
+        renderDecks();
+    }
+}
+
+// --- FILE UPLOAD (MOCK AI) ---
+document.getElementById('drop-zone').onclick = () => document.getElementById('file-upload').click();
+document.getElementById('file-upload').onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('ai-loading').classList.remove('hidden');
+    
+    // Simulate File Parsing Logic
+    setTimeout(() => {
+        addCardInput(`Concept from ${file.name}`, "Extracted definition");
+        addCardInput(`Key detail from ${file.name}`, "Explanation of concept");
+        document.getElementById('ai-loading').classList.add('hidden');
+        showToast("AI Generated cards from file!");
+    }, 1500);
+};
+
+// --- FLASHCARD ENGINE ---
+function startFlashcards(i) {
+    currentDeckIndex = i;
     currentCardIndex = 0;
-    // Sort cards by review date (Spaced Repetition Logic)
-    currentDeck.cards.sort((a, b) => (a.nextReview || 0) - (b.nextReview || 0));
+    // Spaced Repetition Sort (Due cards first)
+    decks[i].cards.sort((a,b) => a.nextReview - b.nextReview);
     showSection('flashcard-mode');
-    updateFlashcard();
+    updateFlashcardUI();
+}
+
+function updateFlashcardUI() {
+    const card = decks[currentDeckIndex].cards[currentCardIndex];
+    document.getElementById('flashcard').classList.remove('flipped');
+    document.getElementById('card-front-text').innerText = card.q;
+    document.getElementById('card-back-text').innerText = card.a;
+    document.getElementById('study-progress-text').innerText = `${currentCardIndex + 1} / ${decks[currentDeckIndex].cards.length}`;
+    document.getElementById('flashcard-rating').classList.add('hidden');
 }
 
 function flipCard() {
     document.getElementById('flashcard').classList.toggle('flipped');
-    document.getElementById('rating-controls').classList.remove('hidden');
-}
-
-function updateFlashcard() {
-    const card = currentDeck.cards[currentCardIndex];
-    document.getElementById('flashcard').classList.remove('flipped');
-    document.getElementById('card-front-text').innerText = card.q;
-    document.getElementById('card-back-text').innerText = card.a;
-    document.getElementById('study-progress-text').innerText = `${currentCardIndex + 1} / ${currentDeck.cards.length}`;
-    document.getElementById('rating-controls').classList.add('hidden');
+    document.getElementById('flashcard-rating').classList.remove('hidden');
 }
 
 function nextCard() {
-    if(currentCardIndex < currentDeck.cards.length - 1) {
+    if (currentCardIndex < decks[currentDeckIndex].cards.length - 1) {
         currentCardIndex++;
-        updateFlashcard();
+        updateFlashcardUI();
     }
 }
 
 function prevCard() {
-    if(currentCardIndex > 0) {
+    if (currentCardIndex > 0) {
         currentCardIndex--;
-        updateFlashcard();
+        updateFlashcardUI();
     }
 }
 
-function rateCard(rating) {
-    // Simple Spaced Repetition logic (SM-2 Lite)
-    let card = currentDeck.cards[currentCardIndex];
-    if(rating === 'hard') card.nextReview = Date.now() + (1000 * 60); // 1 min
-    if(rating === 'good') card.nextReview = Date.now() + (1000 * 60 * 60 * 24); // 1 day
-    if(rating === 'easy') card.nextReview = Date.now() + (1000 * 60 * 60 * 24 * 4); // 4 days
-    
-    localStorage.setItem('kwizly_decks', JSON.stringify(decks));
+function rateFlashcard(difficulty) {
+    let card = decks[currentDeckIndex].cards[currentCardIndex];
+    handleSpacedRep(card, difficulty);
     nextCard();
+    updateStreak();
 }
 
-// --- QUIZ MODE ---
-let quizQuestions = [];
-let quizIndex = 0;
-let score = 0;
+// --- QUIZ ENGINE ---
+function openQuizSettings(i) {
+    currentDeckIndex = i;
+    showSection('quiz-settings');
+}
 
-function startQuiz(index) {
-    const deck = decks[index];
-    if(deck.cards.length < 2) return alert("Need at least 2 cards for a quiz");
-    
-    quizQuestions = deck.cards.map(card => {
-        // Generate random distractors from the same deck
-        let distractors = deck.cards
-            .filter(c => c.a !== card.a)
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 3)
-            .map(c => c.a);
-        
-        return {
-            q: card.q,
-            correct: card.a,
-            options: [...distractors, card.a].sort(() => 0.5 - Math.random())
-        };
-    });
+function startQuizEngine(type) {
+    const deck = decks[currentDeckIndex];
+    if (deck.cards.length < 2) return showToast("Need at least 2 cards for a quiz!");
 
-    quizIndex = 0;
-    score = 0;
+    quizIndex = 0; score = 0; mistakes = [];
+    quizQuestions = deck.cards.map(card => generateQuestion(card, deck.cards, type)).sort(() => 0.5 - Math.random()).slice(0, 50);
+
     showSection('quiz-mode');
     renderQuizQuestion();
 }
 
-function renderQuizQuestion() {
-    const q = quizQuestions[quizIndex];
-    document.getElementById('quiz-question-text').innerText = q.q;
-    const optionsDiv = document.getElementById('quiz-options');
-    optionsDiv.innerHTML = '';
-    
-    document.getElementById('quiz-progress-bar').style.width = `${((quizIndex) / quizQuestions.length) * 100}%`;
+function generateQuestion(card, allCards, type) {
+    let qType = type === 'mixed' ? ['mcq', 'tf', 'id', 'cloze'][Math.floor(Math.random() * 4)] : type;
+    let qObj = { origin: card, type: qType, q: card.q, correct: card.a };
 
-    q.options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        btn.innerText = opt;
-        btn.onclick = () => checkAnswer(btn, opt, q.correct);
-        optionsDiv.appendChild(btn);
-    });
-    
-    document.getElementById('quiz-next-btn').classList.add('hidden');
+    if (qType === 'mcq') {
+        let distractors = allCards.filter(c => c.a !== card.a).sort(() => 0.5 - Math.random()).slice(0, 3).map(c => c.a);
+        qObj.options = [...distractors, card.a].sort(() => 0.5 - Math.random());
+    } else if (qType === 'tf') {
+        let isTrue = Math.random() > 0.5;
+        let displayVal = isTrue ? card.a : allCards[Math.floor(Math.random()*allCards.length)].a;
+        qObj.q = `Is "${card.q}" related to "${displayVal}"?`;
+        qObj.correct = (displayVal === card.a) ? "True" : "False";
+        qObj.options = ["True", "False"];
+    }
+    return qObj;
 }
 
-function checkAnswer(btn, selected, correct) {
-    const btns = document.querySelectorAll('.option-btn');
-    btns.forEach(b => b.disabled = true);
+function renderQuizQuestion() {
+    const q = quizQuestions[quizIndex];
+    const opts = document.getElementById('quiz-options');
+    const inputArea = document.getElementById('quiz-input-container');
+    
+    document.getElementById('quiz-question-text').innerText = q.q;
+    document.getElementById('quiz-progress-text').innerText = `Question ${quizIndex+1}/${quizQuestions.length}`;
+    document.getElementById('quiz-progress-bar').style.width = `${((quizIndex+1)/quizQuestions.length)*100}%`;
+    
+    opts.innerHTML = ''; 
+    opts.classList.add('hidden');
+    inputArea.classList.add('hidden');
+    document.getElementById('quiz-feedback').classList.add('hidden');
+    document.getElementById('quiz-next-btn').classList.add('hidden');
 
-    if(selected === correct) {
-        btn.classList.add('correct');
-        score++;
+    if (q.type === 'mcq' || q.type === 'tf') {
+        opts.classList.remove('hidden');
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.style.width = '100%';
+            btn.style.padding = '15px';
+            btn.style.marginBottom = '10px';
+            btn.style.borderRadius = '12px';
+            btn.style.border = '1.5px solid #ddd';
+            btn.style.backgroundColor = 'white';
+            btn.style.fontFamily = 'Lexend';
+            btn.onclick = () => checkQuizAnswer(opt, btn);
+            opts.appendChild(btn);
+        });
     } else {
-        btn.classList.add('wrong');
-        // highlight correct
-        btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+        inputArea.classList.remove('hidden');
+        document.getElementById('quiz-text-answer').value = '';
+        document.getElementById('quiz-text-answer').focus();
     }
+}
+
+function checkQuizAnswer(val, btnEl = null) {
+    const q = quizQuestions[quizIndex];
+    const isCorrect = val.toLowerCase().trim() === q.correct.toLowerCase().trim();
+    const feedback = document.getElementById('quiz-feedback');
+
+    if (isCorrect) {
+        score++;
+        feedback.innerText = "Correct! ✨";
+        feedback.className = "feedback-box correct";
+        if (btnEl) btnEl.style.borderColor = "#10b981";
+    } else {
+        mistakes.push(q.origin);
+        feedback.innerText = `Wrong! Correct answer: ${q.correct}`;
+        feedback.className = "feedback-box wrong";
+        if (btnEl) btnEl.style.borderColor = "#ef4444";
+    }
+
+    feedback.classList.remove('hidden');
     document.getElementById('quiz-next-btn').classList.remove('hidden');
+    document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+}
+
+function checkTextAnswer() {
+    const val = document.getElementById('quiz-text-answer').value;
+    if (!val) return;
+    checkQuizAnswer(val);
 }
 
 function nextQuizQuestion() {
     quizIndex++;
-    if(quizIndex < quizQuestions.length) {
-        renderQuizQuestion();
-    } else {
-        showResults();
+    if (quizIndex < quizQuestions.length) renderQuizQuestion();
+    else finishQuiz();
+}
+
+function finishQuiz() {
+    showSection('results-mode');
+    const pct = Math.round((score/quizQuestions.length)*100);
+    document.getElementById('score-display').innerText = `${pct}%`;
+    document.getElementById('score-details').innerText = `You got ${score}/${quizQuestions.length} correct.`;
+    
+    if (pct >= 80) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+
+    const btnArea = document.querySelector('.result-btns');
+    btnArea.innerHTML = `
+        <button class="btn-primary" onclick="showSection('deck-page')">Back Home</button>
+        ${mistakes.length > 0 ? `<button class="btn-primary" style="background:#f59e0b" onclick="startReview()">Review Mistakes</button>` : ''}
+    `;
+    updateStreak();
+}
+
+// --- REVIEW MODE (Mistakes only) ---
+let reviewIdx = 0;
+function startReview() {
+    reviewIdx = 0;
+    showSection('review-mode');
+    renderReviewCard();
+}
+
+function renderReviewCard() {
+    const card = mistakes[reviewIdx];
+    document.getElementById('rev-q').innerText = card.q;
+    document.getElementById('rev-a').innerText = card.a;
+}
+
+function handleRate(diff) {
+    handleSpacedRep(mistakes[reviewIdx], diff);
+    reviewIdx++;
+    if (reviewIdx < mistakes.length) renderReviewCard();
+    else {
+        showToast("Review Complete!");
+        showSection('deck-page');
     }
 }
 
-function showResults() {
-    showSection('results-mode');
-    const percent = Math.round((score / quizQuestions.length) * 100);
-    document.getElementById('score-display').innerText = `${percent}%`;
-    if(percent > 70) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+// --- CORE UTILS ---
+function handleSpacedRep(card, diff) {
+    if (!card.interval) card.interval = 1;
+    if (diff === 'hard') card.interval = 1;
+    else if (diff === 'good') card.interval *= 2;
+    else card.interval *= 4;
+    card.nextReview = Date.now() + (card.interval * 86400000);
+    localStorage.setItem('kwizly_decks', JSON.stringify(decks));
 }
 
-// --- UTILITIES ---
 function updateStreak() {
     const today = new Date().toDateString();
     if (lastStudyDate !== today) {
         streak++;
+        lastStudyDate = today;
         localStorage.setItem('kwizly_streak', streak);
         localStorage.setItem('kwizly_last_date', today);
         document.getElementById('streak-count').innerText = streak;
     }
 }
 
-function deleteDeck(index) {
-    if(confirm("Delete this deck?")) {
-        decks.splice(index, 1);
-        localStorage.setItem('kwizly_decks', JSON.stringify(decks));
-        renderDecks();
-    }
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), 3000);
 }
-
-function exportDeck(index) {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(decks[index]));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", decks[index].title + ".kwizly");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-}
-
-// Initial Load
-document.getElementById('streak-count').innerText = streak;
-addCardInput(); // start with one input
