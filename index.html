@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kwizly | Study Smarter</title>
+    <!-- 1. LEXEND FONT -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- 2. TAILWIND CSS (Design) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#834cf1',
+                        secondary: '#9F7AEA',
+                        background: '#F5F3FF',
+                        accent: '#C4B5FD',
+                    },
+                    fontFamily: { sans: ['Lexend', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <!-- 3. REACT (Logic) -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { background-color: #F5F3FF; }
+        .card-shadow { box-shadow: 0 4px 20px rgba(131, 76, 241, 0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function KwizlyApp() {
+            const [view, setView] = useState('home'); // home, decks, study
+            const [decks, setDecks] = useState([
+                { id: 1, title: 'CS Fundamentals', cards: 20, tags: ['Operating Systems', 'Networking'] },
+                { id: 2, title: 'Algorithms', cards: 15, tags: ['Data Structures'] }
+            ]);
+
+            const HomePage = () => (
+                <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
+                    <h1 className="text-6xl font-bold text-primary mb-2">Kwizly</h1>
+                    <p className="text-xl text-gray-600 mb-8 font-light">study smarter, faster, easier</p>
+                    
+                    <div className="bg-white p-8 rounded-[20px] card-shadow max-w-md mb-8">
+                        <h2 className="font-bold mb-4 text-primary">Instructions</h2>
+                        <ul className="text-left text-sm space-y-2 text-gray-600">
+                            <li>✨ Create decks manually or with AI</li>
+                            <li>📦 Import/Export your study files</li>
+                            <li>🔥 Keep your daily streak alive</li>
+                        </ul>
+                    </div>
+
+                    <button 
+                        onClick={() => setView('decks')}
+                        className="bg-primary text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-opacity-90 transition-all">
+                        Start Studying →
+                    </button>
+                </div>
+            );
+
+            const DeckPage = () => (
+                <div className="max-w-5xl mx-auto p-6">
+                    <div className="flex justify-between items-center mb-10">
+                        <h1 className="text-3xl font-bold text-primary">Kwizly</h1>
+                        <button className="bg-black text-white px-6 py-2 rounded-lg font-medium">+ New Deck</button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {decks.map(deck => (
+                            <div key={deck.id} className="bg-white p-6 rounded-[20px] card-shadow border border-purple-100 hover:scale-105 transition-transform">
+                                <h3 className="text-xl font-bold mb-1">{deck.title}</h3>
+                                <p className="text-xs text-gray-400 mb-4">{deck.cards} cards</p>
+                                <div className="flex flex-wrap gap-2 mb-6">
+                                    {deck.tags.map(tag => (
+                                        <span key={tag} className="text-[10px] bg-purple-50 text-primary px-2 py-1 rounded-full uppercase font-bold">{tag}</span>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button className="flex-1 bg-primary text-white py-2 rounded-lg text-sm font-bold">Study</button>
+                                    <button className="flex-1 border border-gray-200 py-2 rounded-lg text-sm font-bold">Quiz</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            return (
+                <main>
+                    {view === 'home' ? <HomePage /> : <DeckPage />}
+                </main>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<KwizlyApp />);
+    </script>
+</body>
+</html>
