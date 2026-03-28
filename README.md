@@ -1,4 +1,4 @@
-# Kwizly
+# kwizly
 
 **Kwizly** is a modern, student-friendly web application designed to make studying faster, smarter, and more efficient—without requiring accounts, subscriptions, or ads.
 
